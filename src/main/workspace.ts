@@ -10,6 +10,7 @@ const RAM_MAX_BYTES = 4 * 1024 ** 3      // hard ceiling: 4 GB
 // ─── Workspace class ─────────────────────────────────────────────────────────
 export class Workspace {
   readonly id:        string
+  readonly name:      string    // GL-101: human-readable name, visible in UI
   readonly createdAt: number
   readonly maxBytes:  number
 
@@ -19,8 +20,9 @@ export class Workspace {
   private _usedBytes   = 0
   private _autoWipe    = false
 
-  constructor(autoWipe = false) {
+  constructor(name = 'Default Workspace', autoWipe = false) {
     this.id        = randomUUID()
+    this.name      = name
     this.createdAt = Date.now()
     this.maxBytes  = Math.min(
       Math.floor(os.totalmem() * RAM_FRACTION),
@@ -53,6 +55,7 @@ export class Workspace {
   status(fileCount: number, pendingCommitCount: number): WorkspaceStatus {
     return {
       id:                 this.id,
+      name:               this.name,
       createdAt:          this.createdAt,
       usedBytes:          this._usedBytes,
       maxBytes:           this.maxBytes,
@@ -69,9 +72,18 @@ let _active: Workspace | null = null
 
 export function getWorkspace(): Workspace | null { return _active }
 
-export function createWorkspace(autoWipe = false): Workspace {
+export function createWorkspace(autoWipe = false, name = 'Default Workspace'): Workspace {
   if (_active) _active.destroy()   // single-slot invariant
-  _active = new Workspace(autoWipe)
+  _active = new Workspace(name, autoWipe)
+  return _active
+}
+
+/**
+ * GL-101: guarantee one workspace always exists.
+ * Called by workspace:getCurrent — safe to call from any code path.
+ */
+export function ensureDefaultWorkspace(autoWipe = false): Workspace {
+  if (!_active) _active = new Workspace('Default Workspace', autoWipe)
   return _active
 }
 

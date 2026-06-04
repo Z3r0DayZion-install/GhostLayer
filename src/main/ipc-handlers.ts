@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { IPC } from '../shared/types'
-import { createWorkspace, destroyWorkspace, getWorkspace } from './workspace'
+import { createWorkspace, destroyWorkspace, getWorkspace, ensureDefaultWorkspace } from './workspace'
 import {
   stageFile, unstageFile,
   getManifest, getManifestSnapshot,
@@ -32,6 +32,15 @@ async function snapshotAfterAsync<T>(fn: () => Promise<T>): Promise<T> {
 export function registerIpcHandlers(): void {
 
   // ── Workspace ───────────────────────────────────────────────────────────────
+
+  // GL-101: always returns a workspace — creates the default if somehow none exists.
+  // This is the canonical first call from the renderer on boot.
+  ipcMain.handle(IPC.WORKSPACE_GET_CURRENT, () => {
+    const ws = ensureDefaultWorkspace()
+    const manifest = getManifest()
+    const pending  = manifest.filter(f => f.status === 'clean' || f.status === 'modified').length
+    return ws.status(manifest.length, pending)
+  })
 
   ipcMain.handle(IPC.WORKSPACE_CREATE, () => {
     const ws = createWorkspace()

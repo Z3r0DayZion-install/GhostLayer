@@ -20,6 +20,8 @@ export default function App() {
   const [crashState,  setCrashState]  = useState<CrashState | null>(null)
   const [errors,      setErrors]      = useState<AppError[]>([])
   const [initialized, setInitialized] = useState(false)
+  // GL-201: depth counter avoids spurious dragleave fires from child elements
+  const dragDepth = useRef(0)
   const errorTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   // ── Error helpers ────────────────────────────────────────────────────────────
@@ -56,9 +58,22 @@ export default function App() {
   // ── Init ─────────────────────────────────────────────────────────────────────
   useEffect(() => {
     async function init() {
+      // GL-101: getCurrent() is guaranteed non-null — seeds workspace state before
+      // anything else renders, so the UI never sees a null workspace on first paint.
+      const ws = await api.workspace.getCurrent()
+      setWorkspace(ws)
+
       const crash = await api.crash.status()
       if (crash.crashDetected) setCrashState(crash)
-      await refreshAll()
+
+      // Fetch files + RAM pressure to complete the initial state
+      const [manifest, ram] = await Promise.all([
+        api.files.manifest(),
+        api.ram.pressure(),
+      ])
+      setFiles(manifest)
+      setPressure(ram)
+
       setInitialized(true)
     }
     init()
@@ -73,18 +88,39 @@ export default function App() {
     return () => clearInterval(id)
   }, [initialized, refreshAll])
 
-  // ── Drag-and-drop staging ────────────────────────────────────────────────────
+  // ── Drag-and-drop staging (GL-201) ──────────────────────────────────────────
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    dragDepth.current += 1
+    if (dragDepth.current === 1) setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    dragDepth.current -= 1
+    if (dragDepth.current === 0) setIsDragging(false)
+  }, [])
+
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
+    dragDepth.current = 0
+    setIsDragging(false)
+
+    // GL-201: extract real filesystem paths (Electron exposes File.path)
     const paths = Array.from(e.dataTransfer.files)
       .map(f => (f as File & { path: string }).path)
       .filter(Boolean)
+
     if (paths.length === 0) {
+      // GL-950: invalid drop — no filesystem paths found (URL drag, text drag, etc.)
       pushError('Nothing to stage — drop a file from your filesystem.')
       return
     }
 
-    // GL-303 / GL-950: surface per-file staging errors
+    // Forward to backend. Main process validates + stages. GL-303/GL-950/GL-201:
+    // directory drops, unreadable files, and RAM pressure all return typed errors.
     const results = await api.files.stage(paths)
     for (const r of results) {
       if (!r.ok) pushError(ghostErrorMessage(r.error))
@@ -126,8 +162,10 @@ export default function App() {
 
   return (
     <div
-      className="app"
+      className={`app${isDragging ? ' app--dragging' : ''}`}
       onDragOver={e => e.preventDefault()}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {crashState?.crashDetected && (

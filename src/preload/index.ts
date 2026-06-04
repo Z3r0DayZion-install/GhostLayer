@@ -10,6 +10,8 @@ import type {
 // Nothing beyond this object reaches the renderer. No nodeIntegration.
 const api = {
   workspace: {
+    // GL-101: guaranteed non-null — use this on boot to seed workspace state
+    getCurrent: ():                   Promise<WorkspaceStatus>       => ipcRenderer.invoke(IPC.WORKSPACE_GET_CURRENT),
     create:  ():                      Promise<WorkspaceStatus>       => ipcRenderer.invoke(IPC.WORKSPACE_CREATE),
     destroy: ():                      Promise<void>                  => ipcRenderer.invoke(IPC.WORKSPACE_DESTROY),
     status:  ():                      Promise<WorkspaceStatus | null>=> ipcRenderer.invoke(IPC.WORKSPACE_STATUS),

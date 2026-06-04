@@ -45,6 +45,16 @@ html, body, #root {
   min-height: 0;
 }
 
+/* GL-201: drag-over state — subtle border highlight, no layout shift */
+.app--dragging {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.app--dragging .drop-zone {
+  color: var(--text);
+}
+.app--dragging .drop-zone__icon { opacity: 0.6; }
+
 .app-loading {
   display: flex;
   align-items: center;
@@ -66,11 +76,24 @@ html, body, #root {
 }
 
 .status-bar__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.status-bar__app-name {
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--accent);
-  white-space: nowrap;
+  line-height: 1.2;
+}
+.status-bar__workspace-name {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  line-height: 1.2;
 }
 
 .status-bar__stats {

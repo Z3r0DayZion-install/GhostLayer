@@ -46,6 +46,11 @@ export async function stageFile(filePath: string): Promise<StageResult> {
     return { ok: false, path: filePath, error: { code: 'FILE_NOT_FOUND', path: filePath } }
   }
 
+  // GL-201: reject directories explicitly — readFile on a dir throws EISDIR uncaught
+  if (stat.isDirectory()) {
+    return { ok: false, path: filePath, error: { code: 'IS_DIRECTORY', path: filePath } }
+  }
+
   if (stat.size > FILE_SIZE_LIMIT) {
     return { ok: false, path: filePath, error: { code: 'FILE_TOO_LARGE', maxBytes: FILE_SIZE_LIMIT } }
   }
@@ -62,8 +67,14 @@ export async function stageFile(filePath: string): Promise<StageResult> {
   const filename   = path.basename(filePath)
   const stagedPath = `/workspace/${fileId}-${filename}`
 
-  // Read from disk → write into memfs. This is the only disk read in the stage path.
-  const contents = await fs.promises.readFile(filePath)
+  // Read from disk → write into memfs. Wrapped so permission errors surface cleanly.
+  let contents: Buffer
+  try {
+    contents = await fs.promises.readFile(filePath)
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e)
+    return { ok: false, path: filePath, error: { code: 'READ_FAILED', reason } }
+  }
   ws.fs.writeFileSync(stagedPath, contents)
   ws.addBytes(stat.size)
 

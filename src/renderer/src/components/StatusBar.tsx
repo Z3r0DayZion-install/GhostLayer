@@ -24,7 +24,13 @@ export function StatusBar({ workspace, pressure, onAutoWipeToggle }: Props) {
 
   return (
     <header className="status-bar">
-      <div className="status-bar__brand">GhostLayer</div>
+      <div className="status-bar__brand">
+        <span className="status-bar__app-name">GhostLayer</span>
+        {/* GL-101: workspace name — real value from main, never hardcoded */}
+        <span className="status-bar__workspace-name">
+          {workspace?.name ?? 'Default Workspace'}
+        </span>
+      </div>
 
       <div className="status-bar__stats">
         <span className="stat">

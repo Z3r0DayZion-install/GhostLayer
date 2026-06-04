@@ -2,9 +2,10 @@
 // IPC channel names — single source of truth for main ↔ renderer communication
 // ─────────────────────────────────────────────────────────────────────────────
 export const IPC = {
-  WORKSPACE_CREATE:  'workspace:create',
-  WORKSPACE_DESTROY: 'workspace:destroy',
-  WORKSPACE_STATUS:  'workspace:status',
+  WORKSPACE_GET_CURRENT: 'workspace:getCurrent',  // GL-101: guaranteed non-null, creates default if needed
+  WORKSPACE_CREATE:      'workspace:create',
+  WORKSPACE_DESTROY:     'workspace:destroy',
+  WORKSPACE_STATUS:      'workspace:status',
   FILE_STAGE:        'file:stage',
   FILE_UNSTAGE:      'file:unstage',
   FILE_COMMIT:       'file:commit',
@@ -22,6 +23,7 @@ export const IPC = {
 // ─────────────────────────────────────────────────────────────────────────────
 export interface WorkspaceStatus {
   id: string
+  name: string          // GL-101: human-readable workspace name ("Default Workspace")
   createdAt: number
   usedBytes: number
   maxBytes: number
@@ -103,8 +105,10 @@ export type GhostError =
   | { code: 'RAM_PRESSURE';       availableBytes: number }
   | { code: 'COMMIT_FAILED';      reason: string }
   | { code: 'FILE_NOT_FOUND';     path: string }
+  | { code: 'IS_DIRECTORY';       path: string }         // GL-201: folders rejected at ingest
+  | { code: 'READ_FAILED';        reason: string }       // GL-201: unreadable file
   | { code: 'ALREADY_DISCARDED';  fileId: string }
-  | { code: 'DUPLICATE_SOURCE';   existingId: string }  // GL-204
+  | { code: 'DUPLICATE_SOURCE';   existingId: string }   // GL-204
 
 /** Human-readable message for any GhostError code. */
 export function ghostErrorMessage(e: GhostError): string {
@@ -114,6 +118,8 @@ export function ghostErrorMessage(e: GhostError): string {
     case 'RAM_PRESSURE':         return `Not enough workspace headroom (${fmtBytes(e.availableBytes)} free). Commit or discard files first.`
     case 'COMMIT_FAILED':        return `Commit failed: ${e.reason}`
     case 'FILE_NOT_FOUND':       return `File not found: ${e.path}`
+    case 'IS_DIRECTORY':         return `Folders cannot be staged — drop a file instead.`
+    case 'READ_FAILED':          return `Could not read file: ${e.reason}`
     case 'ALREADY_DISCARDED':    return 'File was already discarded.'
     case 'DUPLICATE_SOURCE':     return 'This file is already staged. Discard or commit the existing copy first.'
   }
