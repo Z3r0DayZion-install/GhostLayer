@@ -1,0 +1,44 @@
+import { contextBridge, ipcRenderer } from 'electron'
+import { IPC } from '../shared/types'
+import type {
+  WorkspaceStatus, StagedFile, StageResult,
+  CommitOptions, CommitResult,
+  CrashState, RAMPressure,
+} from '../shared/types'
+
+// ─── The surface exposed to the renderer ────────────────────────────────────
+// Nothing beyond this object reaches the renderer. No nodeIntegration.
+const api = {
+  workspace: {
+    create:  ():                      Promise<WorkspaceStatus>       => ipcRenderer.invoke(IPC.WORKSPACE_CREATE),
+    destroy: ():                      Promise<void>                  => ipcRenderer.invoke(IPC.WORKSPACE_DESTROY),
+    status:  ():                      Promise<WorkspaceStatus | null>=> ipcRenderer.invoke(IPC.WORKSPACE_STATUS),
+  },
+
+  files: {
+    stage:    (paths: string[]):      Promise<StageResult[]>         => ipcRenderer.invoke(IPC.FILE_STAGE, paths),
+    unstage:  (fileId: string):       Promise<void>                  => ipcRenderer.invoke(IPC.FILE_UNSTAGE, fileId),
+    commit:   (opts: CommitOptions):  Promise<CommitResult>          => ipcRenderer.invoke(IPC.FILE_COMMIT, opts),
+    commitAll:():                     Promise<CommitResult[]>        => ipcRenderer.invoke(IPC.FILE_COMMIT_ALL),
+    manifest: ():                     Promise<StagedFile[]>          => ipcRenderer.invoke(IPC.MANIFEST_GET),
+  },
+
+  wipe: {
+    toggle: (enabled: boolean):       Promise<void>                  => ipcRenderer.invoke(IPC.WIPE_TOGGLE, enabled),
+    now:    ():                       Promise<void>                  => ipcRenderer.invoke(IPC.WIPE_NOW),
+  },
+
+  crash: {
+    status:  ():                      Promise<CrashState>            => ipcRenderer.invoke(IPC.CRASH_STATUS),
+    dismiss: ():                      Promise<void>                  => ipcRenderer.invoke(IPC.CRASH_DISMISS),
+  },
+
+  ram: {
+    pressure: ():                     Promise<RAMPressure>           => ipcRenderer.invoke(IPC.RAM_PRESSURE),
+  },
+} as const
+
+contextBridge.exposeInMainWorld('ghostlayer', api)
+
+// Export the type so the renderer can reference it via env.d.ts
+export type GhostLayerAPI = typeof api

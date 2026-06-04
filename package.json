@@ -1,0 +1,44 @@
+{
+  "name": "ghostlayer",
+  "version": "0.1.0",
+  "description": "A controllable RAM-backed layer between active work and permanent storage.",
+  "private": true,
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev":     "electron-vite dev",
+    "build":   "electron-vite build",
+    "start":   "electron-vite preview",
+    "pack":    "npm run build && electron-builder --dir",
+    "dist":    "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "memfs": "^4.9.2"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@types/node":                "^20.14.10",
+    "@types/react":               "^18.3.3",
+    "@types/react-dom":           "^18.3.0",
+    "@vitejs/plugin-react":       "^4.3.1",
+    "electron":                   "^31.0.0",
+    "electron-builder":           "^24.13.3",
+    "electron-vite":              "^2.3.0",
+    "react":                      "^18.3.1",
+    "react-dom":                  "^18.3.1",
+    "typescript":                 "^5.5.2"
+  },
+  "build": {
+    "appId":       "app.ghostlayer",
+    "productName": "GhostLayer",
+    "copyright":   "GhostLayer",
+    "directories": { "output": "release" },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon":   "assets/icon.ico"
+    },
+    "files": [
+      "out/**",
+      "!**/*.map"
+    ]
+  }
+}
