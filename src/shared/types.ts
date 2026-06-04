@@ -107,6 +107,7 @@ export type GhostError =
   | { code: 'FILE_NOT_FOUND';     path: string }
   | { code: 'IS_DIRECTORY';       path: string }         // GL-201: folders rejected at ingest
   | { code: 'READ_FAILED';        reason: string }       // GL-201: unreadable file
+  | { code: 'STAGE_FAILED';       reason: string }       // GL-202: memfs write failed
   | { code: 'ALREADY_DISCARDED';  fileId: string }
   | { code: 'DUPLICATE_SOURCE';   existingId: string }   // GL-204
 
@@ -120,6 +121,7 @@ export function ghostErrorMessage(e: GhostError): string {
     case 'FILE_NOT_FOUND':       return `File not found: ${e.path}`
     case 'IS_DIRECTORY':         return `Folders cannot be staged — drop a file instead.`
     case 'READ_FAILED':          return `Could not read file: ${e.reason}`
+    case 'STAGE_FAILED':         return `Staging failed: ${e.reason}`
     case 'ALREADY_DISCARDED':    return 'File was already discarded.'
     case 'DUPLICATE_SOURCE':     return 'This file is already staged. Discard or commit the existing copy first.'
   }

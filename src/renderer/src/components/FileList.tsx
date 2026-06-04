@@ -70,8 +70,12 @@ export function FileList({ files, onRefresh, onError }: Props) {
             className={`file-row file-row--${file.status}`}
             aria-label={`${file.filename}, ${STATUS_LABEL[file.status]}`}
           >
-            <span className="file-row__name" title={file.originalPath}>
-              {file.filename}
+            {/* GL-203: show both filename and source path — source path is visible, not just a tooltip */}
+            <span className="file-row__name-group">
+              <span className="file-row__name">{file.filename}</span>
+              <span className="file-row__source" title={file.originalPath}>
+                {file.originalPath}
+              </span>
             </span>
             <span className="file-row__size">{fmtBytes(file.sizeBytes)}</span>
             <span

@@ -75,14 +75,21 @@ export async function stageFile(filePath: string): Promise<StageResult> {
     const reason = e instanceof Error ? e.message : String(e)
     return { ok: false, path: filePath, error: { code: 'READ_FAILED', reason } }
   }
-  ws.fs.writeFileSync(stagedPath, contents)
+  // GL-202: write into memfs — in-memory only, no disk output created here
+  try {
+    ws.fs.writeFileSync(stagedPath, contents)
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : String(e)
+    return { ok: false, path: filePath, error: { code: 'STAGE_FAILED', reason } }
+  }
   ws.addBytes(stat.size)
 
+  // GL-203: create manifest entry — truthful metadata, status 'clean' = in RAM, not committed
   const entry: StagedFile = {
     id:           fileId,
     filename,
-    originalPath: filePath,
-    stagedPath,
+    originalPath: filePath,   // where the file came from on disk
+    stagedPath,               // path inside memfs — not a real filesystem path
     sizeBytes:    stat.size,
     status:       'clean',
     stagedAt:     Date.now(),
