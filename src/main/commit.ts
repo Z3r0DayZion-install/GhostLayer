@@ -12,7 +12,7 @@ export async function commitFile(options: CommitOptions): Promise<CommitResult> 
   const entry = getManifest().find(f => f.id === options.fileId)
   if (!entry)             return { fileId: options.fileId, success: false, error: 'File not found in staging manifest' }
   if (entry.status === 'discarded') return { fileId: options.fileId, success: false, error: 'File has been discarded' }
-  if (entry.status === 'committed') return { fileId: options.fileId, success: true, destination: entry.originalPath }
+  if (entry.status === 'committed') return { fileId: options.fileId, success: true, destination: entry.committedPath ?? entry.originalPath }
 
   const destination = options.destination ?? entry.originalPath
   const tmpPath     = destination + '.ghostlayer-tmp'
