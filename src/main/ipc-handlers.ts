@@ -91,6 +91,7 @@ export function registerIpcHandlers(): void {
     discardAll()
     clearManifest()
     persistManifestSnapshot([])
+    ensureDefaultWorkspace()   // post-wipe reinit: app must be ready to stage files again immediately
   })
 
   // ── Crash ────────────────────────────────────────────────────────────────────
