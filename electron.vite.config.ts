@@ -4,25 +4,15 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   main: {
-    // Main process: externalize node_modules, compile TypeScript → out/main/
+    // Main process: electron-vite auto-detects src/main/index.ts
     plugins: [externalizeDepsPlugin()],
-    build: {
-      rollupOptions: {
-        input: { index: resolve(__dirname, 'src/main/index.ts') },
-      },
-    },
   },
   preload: {
-    // Preload script: also externalized, compiled to out/preload/
+    // Preload script: electron-vite auto-detects src/preload/index.ts
     plugins: [externalizeDepsPlugin()],
-    build: {
-      rollupOptions: {
-        input: { index: resolve(__dirname, 'src/preload/index.ts') },
-      },
-    },
   },
   renderer: {
-    // Renderer: Vite + React. index.html lives in src/renderer/
+    // Renderer: Vite + React. Root is src/renderer/ so /src/main.tsx resolves correctly.
     root: resolve(__dirname, 'src/renderer'),
     plugins: [react()],
     build: {
