@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, Tray, Menu, nativeImage } from 'electron'
 import path from 'path'
 import { registerIpcHandlers } from './ipc-handlers'
 import { markSessionOpen, markSessionClosed, getPersistedAutoWipe } from './crash'
@@ -48,8 +48,8 @@ function createWindow(): BrowserWindow {
 
 // ─── Tray ─────────────────────────────────────────────────────────────────────
 function createTray(win: BrowserWindow): Tray {
-  // Placeholder icon — replace with real assets
-  const icon  = nativeImage.createEmpty()
+  const iconPath = path.join(app.getAppPath(), 'assets', 'icon.ico')
+  const icon     = nativeImage.createFromPath(iconPath)
   const tray  = new Tray(icon)
   tray.setToolTip('GhostLayer')
 

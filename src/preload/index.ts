@@ -38,6 +38,15 @@ const api = {
   ram: {
     pressure: ():                     Promise<RAMPressure>           => ipcRenderer.invoke(IPC.RAM_PRESSURE),
   },
+
+  tray: {
+    // Push events from the main process (tray menu → renderer).
+    // Call removeXxx in useEffect cleanup to avoid duplicate listeners on re-render.
+    onCommitAll:      (cb: () => void) => ipcRenderer.on('tray:commit-all',  () => cb()),
+    onDiscardAll:     (cb: () => void) => ipcRenderer.on('tray:discard-all', () => cb()),
+    removeCommitAll:  ()               => ipcRenderer.removeAllListeners('tray:commit-all'),
+    removeDiscardAll: ()               => ipcRenderer.removeAllListeners('tray:discard-all'),
+  },
 } as const
 
 contextBridge.exposeInMainWorld('ghostlayer', api)
