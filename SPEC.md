@@ -1,7 +1,5 @@
 # GhostLayer — MVP Feature Spec
 
-Internal codename: **RAMwich**. Public name: **GhostLayer**. Never swap them.
-
 ---
 
 ## Decisions locked before first line of product code
@@ -14,7 +12,7 @@ Internal codename: **RAMwich**. Public name: **GhostLayer**. Never swap them.
 | Commit is atomic? | **Best-effort atomic** | Write to `.ghostlayer-tmp`, then `rename()`. Works within a volume. Cross-volume: copy then delete. |
 | Crash recovery promise | **Honest: contents are lost** | Don't promise what we can't deliver. Persist metadata (names/paths) only so user knows what they lost. |
 | Auto-wipe default | **OFF** | Opt-in. No surprise data loss on first run. |
-| Workspace count (MVP) | **1** | Free tier. Pro gates multiple workspaces. |
+| Workspace count (MVP) | **1** | MVP scope: single workspace only. |
 | Secure wipe in MVP? | **No** | Standard dealloc only. Document it. Pro V1.1 adds zero-fill option. |
 | File size limit | **2 GB per file** | Sane single-file ceiling. |
 | Workspace RAM cap | **min(25% total RAM, 4 GB)** | Avoids OOM. User can see cap in status bar. |
@@ -33,7 +31,7 @@ Internal codename: **RAMwich**. Public name: **GhostLayer**. Never swap them.
 | Auto-Wipe | WIPE | on-exit toggle, confirmation UX |
 | RAM Pressure | PRESSURE | monitor, warn, reject on cap |
 | UI Dashboard | UI | layout, status bar, file list, action bar, tray |
-| Free/Pro Gate | GATE | free tier enforcement, Pro upgrade prompt stub |
+
 
 ---
 
@@ -619,39 +617,6 @@ Internal codename: **RAMwich**. Public name: **GhostLayer**. Never swap them.
 
 ---
 
-### GATE-001 — Free tier enforcement
-
-**Priority:** P1 (stub only for MVP)
-
-**Free tier limits:**
-- 1 workspace (enforced)
-- No Pro features gated yet (Pro gate is a stub — show upgrade prompt, no paywall)
-
-**For MVP:** The free/Pro distinction is structural only. Gate checks exist in code but the Pro gate just shows a "join waitlist" modal. No payment integration.
-
-**Acceptance criteria:**
-- [ ] Single-workspace limit is enforced in `createWorkspace()`.
-- [ ] Pro-gated code paths have a `requiresPro()` guard that currently shows the waitlist modal.
-- [ ] No payment integration in MVP scope.
-
----
-
-### GATE-002 — Pro upgrade prompt
-
-**Priority:** P1
-
-**Behavior:**
-- When user hits a Pro-gated action: show modal with `This feature is in GhostLayer Pro.` + `[Join waitlist]` button.
-- "Join waitlist" opens a URL (placeholder: `https://ghostlayer.app/pro`) in the system browser.
-- No email capture inside the app for MVP.
-
-**Acceptance criteria:**
-- [ ] Modal shown for any Pro-gated action.
-- [ ] URL opens in browser (not Electron window).
-- [ ] Modal is dismissible.
-
----
-
 ## What is explicitly NOT in this spec
 
 - Ghost Shield / file isolation
@@ -705,5 +670,4 @@ All channels are `ipcMain.handle` / `ipcRenderer.invoke` (request-response). No 
 | WIPE | 2 | 2 | 0 |
 | PRESSURE | 3 | 3 | 0 |
 | UI | 6 | 5 | 1 |
-| GATE | 2 | 0 | 2 |
-| **Total** | **31** | **26** | **5** |
+| **Total** | **29** | **26** | **3** |
