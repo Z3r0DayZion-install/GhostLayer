@@ -14,8 +14,8 @@ GhostLayer is a Windows desktop application that lets you stage files in RAM bef
 
 | File | What it is |
 |------|-----------|
-| `GhostLayer Setup 0.1.0.exe` | NSIS installer — recommended |
-| `GhostLayer.exe` | Unpacked executable (no installer) |
+| `GhostLayer.Setup.0.1.0.exe` | NSIS installer — recommended |
+| `GhostLayer-win-unpacked.zip` | Unpacked build (no installer) |
 
 > **SmartScreen note:** GhostLayer is not yet code-signed. Windows may show a SmartScreen warning on first run. Click *More info → Run anyway* to proceed.
 
