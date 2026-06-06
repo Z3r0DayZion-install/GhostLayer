@@ -93,3 +93,11 @@ npm install
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the full version history.  
 See [`RELEASE_v0.1.0.md`](RELEASE_v0.1.0.md) for the full milestone record.
+
+---
+
+## Feedback
+
+Found a bug? Have a question? Use the [GitHub Discussions thread](https://github.com/Z3r0DayZion-install/GhostLayer/discussions/30) for v0.1.0 — that's the active feedback channel right now.
+
+For bugs that reproduce consistently, open an [issue](https://github.com/Z3r0DayZion-install/GhostLayer/issues).
