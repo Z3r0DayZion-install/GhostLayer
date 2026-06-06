@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GhostLayer — A live RAM layer for Windows</title>
+  <meta name="description" content="GhostLayer lets you stage files in RAM before deciding what gets saved to disk. Drop a file in, keep it temporary, then commit or discard." />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#050912" />
+  <meta name="color-scheme" content="dark" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="GhostLayer — A live RAM layer for Windows" />
+  <meta property="og:description" content="Stage files in RAM. Commit on purpose. Discard without clutter." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="GhostLayer — A live RAM layer for Windows" />
+  <meta name="twitter:description" content="Stage files in RAM. Commit on purpose. Discard without clutter." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #050912;
+      --surface:  #0b1120;
+      --border:   #1a2540;
+      --accent:   #4f8ef7;
+      --accent2:  #8b5cf6;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --mono:     'Courier New', Courier, monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 1rem;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── layout ── */
+    .container { max-width: 760px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── nav ── */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.05em;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-badge {
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      background: var(--border);
+      color: var(--muted);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── hero ── */
+    .hero {
+      padding: 6rem 0 4rem;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost {
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    /* ── diagram ── */
+    .diagram-block {
+      margin: 3rem 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2rem;
+    }
+    .diagram {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: var(--text);
+      text-align: center;
+    }
+    .diagram .label-stage  { color: var(--accent); font-weight: 700; }
+    .diagram .label-commit { color: var(--green);  font-weight: 700; }
+    .diagram .label-discard{ color: var(--red);    font-weight: 700; }
+    .diagram .arrow        { color: var(--muted); }
+
+    /* ── sections ── */
+    section { padding: 4rem 0; border-top: 1px solid var(--border); }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    p { margin-bottom: 1rem; color: var(--text); }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── feature grid ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .feature-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: var(--accent);
+      font-family: var(--mono);
+    }
+    .feature-card p {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    /* ── action table ── */
+    .action-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+      font-size: 0.93rem;
+    }
+    .action-table th {
+      text-align: left;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 0.75rem;
+    }
+    .action-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .action-table td:first-child {
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .action-table tr:last-child td { border-bottom: none; }
+
+    /* ── use-cases ── */
+    .use-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+    .use-list li {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .use-list li::before {
+      content: '→ ';
+      color: var(--accent);
+      font-family: var(--mono);
+    }
+
+    /* ── honesty box ── */
+    .honesty-box {
+      background: rgba(239, 68, 68, 0.07);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .honesty-box h3 {
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      color: var(--red);
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .honesty-box p { font-size: 0.92rem; color: var(--muted); }
+
+    /* ── faq ── */
+    .faq-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    .faq-item {}
+    .faq-item dt {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.35rem;
+    }
+    .faq-item dd {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-left: 0;
+    }
+
+    /* ── cta ── */
+    .cta {
+      padding: 5rem 0;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    .cta h2 { font-size: 2rem; margin-bottom: 0.75rem; }
+    .cta p { color: var(--muted); max-width: 460px; margin: 0 auto 2rem; }
+
+    /* ── footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- nav -->
+  <nav>
+    <div class="container">
+      <span class="nav-logo">Ghost<span>Layer</span></span>
+      <span class="nav-badge">v0.1.0</span>
+    </div>
+  </nav>
+
+  <!-- hero -->
+  <section class="hero" style="border-top: none;">
+    <div class="container">
+      <p class="hero-eyebrow">Windows — RAM-backed file staging</p>
+      <h1>Control what becomes <em>permanent.</em></h1>
+      <p class="hero-sub">
+        GhostLayer stages files in RAM before they touch disk.
+        Drop a file in, keep it temporary, then commit it or discard it — your call.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#download">Download v0.1.0</a>
+        <a class="btn btn-ghost" href="#how-it-works">How it works</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- diagram -->
+  <div class="container">
+    <div class="diagram-block">
+      <div class="diagram">
+        <div>Disk / Downloads / Desktop</div>
+        <div class="arrow">↓</div>
+        <div><span class="label-stage">GhostLayer</span> (staged in RAM)</div>
+        <div class="arrow">&nbsp;&nbsp;&nbsp;&nbsp;↙&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↘</div>
+        <div>
+          <span class="label-commit">Commit</span>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <span class="label-discard">Discard</span>
+        </div>
+        <div style="color: var(--muted); font-size: 0.8rem;">
+          write to disk &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; remove from RAM
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- how it works -->
+  <section id="how-it-works">
+    <div class="container">
+      <h2>How it works</h2>
+      <p>
+        Most apps write to disk the moment a file is touched. GhostLayer changes that by
+        inserting a controllable middle layer: files come in, live in RAM, and only reach
+        disk when you say so.
+      </p>
+      <p>
+        Windows is good at storing files, but bad at handling temporary state. A lot of
+        work isn't meant to become permanent right away — test files, scratch edits,
+        one-off downloads, private notes. GhostLayer makes temporary work intentional.
+      </p>
+
+      <table class="action-table">
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>What happens</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Stage</td>
+            <td>Drop a file into GhostLayer — it lives in RAM, not disk</td>
+          </tr>
+          <tr>
+            <td>Commit</td>
+            <td>Write a staged file to disk permanently</td>
+          </tr>
+          <tr>
+            <td>Discard</td>
+            <td>Remove a staged file from RAM without writing anything to disk</td>
+          </tr>
+          <tr>
+            <td>Commit All</td>
+            <td>Flush everything staged to disk at once</td>
+          </tr>
+          <tr>
+            <td>Discard All</td>
+            <td>Clear all staged files from RAM at once</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- features -->
+  <section id="features">
+    <div class="container">
+      <h2>Features</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>RAM staging</h3>
+          <p>Drop files into a temporary layer. Nothing touches disk until you decide.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Commit</h3>
+          <p>Write exactly what you want to disk. Nothing else follows.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Discard</h3>
+          <p>Remove staged files from RAM cleanly. No residue.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Bulk actions</h3>
+          <p>Commit All or Discard All — handle multiple files in one shot.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Tray control</h3>
+          <p>Full tray integration for staging, committing, and discarding without opening a window.</p>
+        </div>
+        <div class="feature-card">
+          <h3>RAM awareness</h3>
+          <p>Tracks memory pressure and blocks oversize staging before it causes bad state.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- use cases -->
+  <section id="use-cases">
+    <div class="container">
+      <h2>When to use it</h2>
+      <p>GhostLayer is useful when you want temporary work to stay temporary.</p>
+      <ul class="use-list">
+        <li>Test files you don't want to keep</li>
+        <li>Scratch files and one-off edits</li>
+        <li>Temporary downloads</li>
+        <li>Private or disposable notes</li>
+        <li>Extracted archives you'll discard</li>
+        <li>"Not sure yet" files</li>
+        <li>Keeping disk clean during dev work</li>
+        <li>Working without leaving traces</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- honesty -->
+  <section id="honest">
+    <div class="container">
+      <h2>Honest by design</h2>
+      <p>
+        GhostLayer doesn't fake recovery or pretend temporary RAM state is permanent.
+        If something is staged in RAM, it is temporary until you commit it.
+      </p>
+      <div class="honesty-box">
+        <h3>Crash behavior</h3>
+        <p>
+          On crash, uncommitted RAM contents may be lost. GhostLayer preserves metadata
+          so you can see what was affected — but it makes no fake recovery promises.
+          You always know exactly what state your files are in.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- not -->
+  <section id="not">
+    <div class="container">
+      <h2>What GhostLayer is not</h2>
+      <p>GhostLayer is focused. It solves one problem well.</p>
+      <ul class="use-list">
+        <li>Not a full VM</li>
+        <li>Not a kernel sandbox</li>
+        <li>Not a RAM optimizer</li>
+        <li>Not a cloud sync tool</li>
+        <li>Not a recovery app</li>
+        <li>Not a file manager replacement</li>
+      </ul>
+      <p style="margin-top: 1.25rem; color: var(--muted);">
+        GhostLayer is a RAM-backed staging layer for Windows files.
+        It gives you control over temporary file state before it becomes permanent.
+      </p>
+    </div>
+  </section>
+
+  <!-- faq -->
+  <section id="faq">
+    <div class="container">
+      <h2>FAQ</h2>
+      <dl class="faq-list">
+        <div class="faq-item">
+          <dt>What does GhostLayer actually do?</dt>
+          <dd>It lets you drop files into a RAM-backed workspace, then commit them to disk or discard them.</dd>
+        </div>
+        <div class="faq-item">
+          <dt>Does GhostLayer save files automatically?</dt>
+          <dd>No. That's the point. Files staged in GhostLayer stay temporary until you commit them.</dd>
+        </div>
+        <div class="faq-item">
+          <dt>Is this just a RAM disk?</dt>
+          <dd>No. A RAM disk is raw storage. GhostLayer is a workflow tool built around staging, visibility, commit, and discard.</dd>
+        </div>
+        <div class="faq-item">
+          <dt>Is GhostLayer a sandbox?</dt>
+          <dd>Not in the full VM or kernel-driver sense. It is a temporary RAM-backed staging layer, not a full isolation system.</dd>
+        </div>
+        <div class="faq-item">
+          <dt>What happens on crash?</dt>
+          <dd>GhostLayer is honest: uncommitted RAM contents may be lost. It preserves metadata so you can see what was affected, but it does not fake file recovery.</dd>
+        </div>
+        <div class="faq-item">
+          <dt>Who is this for?</dt>
+          <dd>Mostly power users, developers, testers, and privacy-minded users who want a cleaner, more intentional Windows workflow.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- cta -->
+  <section class="cta" id="download">
+    <div class="container">
+      <h2>Stage in RAM.<br>Save on purpose.</h2>
+      <p>GhostLayer v0.1.0 — packaged Windows app, working installer, verified core loop.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://github.com/Z3r0DayZion-install/GhostLayer/releases/latest">Download for Windows</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- footer -->
+  <footer>
+    <div class="container">
+      GhostLayer v0.1.0 &nbsp;·&nbsp; Windows &nbsp;·&nbsp; RAM-backed file staging
+    </div>
+  </footer>
+
+</body>
+</html>

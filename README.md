@@ -8,6 +8,19 @@ GhostLayer is a Windows desktop application that lets you stage files in RAM bef
 
 ---
 
+## Download
+
+**[GhostLayer v0.1.0 — GitHub Releases](https://github.com/Z3r0DayZion-install/GhostLayer/releases/latest)**
+
+| File | What it is |
+|------|-----------|
+| `GhostLayer Setup 0.1.0.exe` | NSIS installer — recommended |
+| `GhostLayer.exe` | Unpacked executable (no installer) |
+
+> **SmartScreen note:** GhostLayer is not yet code-signed. Windows may show a SmartScreen warning on first run. Click *More info → Run anyway* to proceed.
+
+---
+
 ## Core workflow
 
 ```
