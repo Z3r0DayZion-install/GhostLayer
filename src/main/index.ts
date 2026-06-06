@@ -48,7 +48,12 @@ function createWindow(): BrowserWindow {
 
 // ─── Tray ─────────────────────────────────────────────────────────────────────
 function createTray(win: BrowserWindow): Tray {
-  const iconPath = path.join(app.getAppPath(), 'assets', 'icon.ico')
+  // In packaged mode app.getAppPath() points inside app.asar, which the native
+  // image loader cannot read. extraResources deposits the ICO beside the ASAR
+  // at resources/assets/icon.ico, accessible via process.resourcesPath.
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets', 'icon.ico')
+    : path.join(app.getAppPath(), 'assets', 'icon.ico')
   const icon     = nativeImage.createFromPath(iconPath)
   const tray  = new Tray(icon)
   tray.setToolTip('GhostLayer')
