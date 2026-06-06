@@ -2,6 +2,7 @@
   "name": "ghostlayer",
   "version": "0.1.0",
   "description": "A controllable RAM-backed layer between active work and permanent storage.",
+  "author": "GhostLayer",
   "private": true,
   "main": "out/main/index.js",
   "scripts": {
