@@ -88,18 +88,6 @@ export default function App() {
     return () => clearInterval(id)
   }, [initialized, refreshAll])
 
-  // ── Tray action listeners ─────────────────────────────────────────────────────
-  // Main process sends push events when the tray "Commit All" / "Discard All"
-  // items are clicked. Cleanup removes listeners before the effect re-runs.
-  useEffect(() => {
-    api.tray.onCommitAll(handleCommitAll)
-    api.tray.onDiscardAll(handleDiscardAll)
-    return () => {
-      api.tray.removeCommitAll()
-      api.tray.removeDiscardAll()
-    }
-  }, [handleCommitAll, handleDiscardAll])
-
   // ── Drag-and-drop staging (GL-201) ──────────────────────────────────────────
   const [isDragging, setIsDragging] = useState(false)
 
@@ -164,6 +152,18 @@ export default function App() {
     await api.crash.dismiss()
     setCrashState(null)
   }, [])
+
+  // ── Tray action listeners ─────────────────────────────────────────────────────
+  // Main process sends push events when the tray "Commit All" / "Discard All"
+  // items are clicked. Must be after all useCallback definitions to avoid TDZ.
+  useEffect(() => {
+    api.tray.onCommitAll(handleCommitAll)
+    api.tray.onDiscardAll(handleDiscardAll)
+    return () => {
+      api.tray.removeCommitAll()
+      api.tray.removeDiscardAll()
+    }
+  }, [handleCommitAll, handleDiscardAll])
 
   // ── Render ───────────────────────────────────────────────────────────────────
   if (!initialized) {
