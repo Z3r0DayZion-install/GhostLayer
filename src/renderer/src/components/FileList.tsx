@@ -1,6 +1,7 @@
 import React from 'react'
 import type { StagedFile } from '../../../shared/types'
 import { ghostErrorMessage } from '../../../shared/types'
+import { GhostLogo } from './GhostLogo'
 
 const api = window.ghostlayer
 
@@ -33,7 +34,7 @@ function fmtBytes(b: number): string {
 function EmptyState() {
   return (
     <div className="drop-zone">
-      <div className="drop-zone__icon" aria-hidden>⬡</div>
+      <GhostLogo variant="idle" />
       <p className="drop-zone__heading">Drop files here to stage them</p>
       <p className="drop-zone__sub">Staged files live in RAM — nothing touches disk until you commit</p>
     </div>

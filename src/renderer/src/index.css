@@ -24,6 +24,11 @@
   --radius-sm:    4px;
   --font:         'Inter', 'Segoe UI', system-ui, sans-serif;
   --mono:         'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+
+  --ghost-green:        #00FF41;
+  --ghost-green-dim:    #00C330;
+  --ghost-glow-soft:    rgba(0, 255, 65, 0.45);
+  --ghost-glow-strong:  rgba(0, 255, 65, 0.80);
 }
 
 html, body, #root {
@@ -77,10 +82,16 @@ html, body, #root {
 
 .status-bar__brand {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   white-space: nowrap;
   flex-shrink: 0;
+}
+.status-bar__brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 .status-bar__app-name {
   font-size: 14px;
@@ -94,6 +105,51 @@ html, body, #root {
   color: var(--text-muted);
   letter-spacing: 0.03em;
   line-height: 1.2;
+}
+
+/* ─── Ghost logo ─────────────────────────────────────────────────────────────── */
+/* Tray variant: small, subtle float + soft glow pulse */
+.ghost-logo {
+  color: var(--ghost-green-dim);
+  flex-shrink: 0;
+  animation:
+    ghost-float      2.6s ease-in-out infinite alternate,
+    ghost-glow-pulse 3.2s ease-in-out infinite;
+}
+
+/* Idle variant: larger drop-zone ghost, slower + more pronounced glow */
+.ghost-logo--idle {
+  color: var(--ghost-green-dim);
+  opacity: 0.55;
+  animation:
+    ghost-float      3.4s ease-in-out infinite alternate,
+    ghost-glow-pulse 4.0s ease-in-out infinite;
+}
+
+/* Dragging state: ghost in drop zone brightens when something is dragged over */
+.app--dragging .ghost-logo--idle {
+  opacity: 0.9;
+  color: var(--ghost-green);
+  animation:
+    ghost-float      1.4s ease-in-out infinite alternate,
+    ghost-glow-strong 1.8s ease-in-out infinite;
+}
+
+@keyframes ghost-float {
+  from { transform: translateY(0px);  }
+  to   { transform: translateY(-4px); }
+}
+
+@keyframes ghost-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 3px var(--ghost-glow-soft)); }
+  50%       { filter: drop-shadow(0 0 7px var(--ghost-glow-strong))
+                      drop-shadow(0 0 14px var(--ghost-glow-soft)); }
+}
+
+@keyframes ghost-glow-strong {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--ghost-glow-strong)); }
+  50%       { filter: drop-shadow(0 0 12px var(--ghost-glow-strong))
+                      drop-shadow(0 0 20px var(--ghost-glow-soft)); }
 }
 
 .status-bar__stats {
@@ -170,7 +226,7 @@ html, body, #root {
   color: var(--text-muted);
   text-align: center;
 }
-.drop-zone__icon    { font-size: 36px; opacity: 0.25; }
+.drop-zone__icon    { font-size: 36px; opacity: 0.25; }  /* legacy text glyphs */
 .drop-zone__heading { font-size: 14px; color: var(--text-dim); }
 .drop-zone__sub     { font-size: 12px; color: var(--text-dim); }
 
