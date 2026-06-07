@@ -10,6 +10,12 @@ import { clearManifest } from './staging'
 let mainWindow: BrowserWindow | null = null
 
 function createWindow(): BrowserWindow {
+  // Resolve the desktop icon for the window chrome (title bar + taskbar button).
+  // ghostAsset() is hoisted — safe to call before its lexical position in the file.
+  const windowIcon = nativeImage.createFromPath(
+    ghostAsset('ghostlayer-icon-desktop.ico')
+  )
+
   const win = new BrowserWindow({
     width:           900,
     height:          650,
@@ -17,6 +23,7 @@ function createWindow(): BrowserWindow {
     minHeight:       500,
     title:           'GhostLayer',
     backgroundColor: '#0f1117',
+    icon:            windowIcon.isEmpty() ? undefined : windowIcon,
     show:            false,   // shown after 'ready-to-show' to avoid flash
     webPreferences: {
       preload:          path.join(__dirname, '../preload/index.js'),

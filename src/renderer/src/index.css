@@ -12,10 +12,12 @@
   --text-muted:   #7a8499;
   --text-dim:     #4a5368;
 
-  --accent:       #5b8def;
-  --accent-hover: #7aa3f5;
+  /* Primary accent = Matrix green (brand color) */
+  --accent:       #00CC33;
+  --accent-hover: #00FF41;
 
-  --green:        #3ddc84;
+  /* Semantic palette */
+  --green:        #00CC33;   /* committed / success */
   --yellow:       #f5c842;
   --red:          #e55353;
   --red-dim:      #7a2222;
@@ -26,7 +28,7 @@
   --mono:         'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
 
   --ghost-green:        #00FF41;
-  --ghost-green-dim:    #00C330;
+  --ghost-green-dim:    #00CC33;   /* matches --accent so logo + UI are in sync */
   --ghost-glow-soft:    rgba(0, 255, 65, 0.45);
   --ghost-glow-strong:  rgba(0, 255, 65, 0.80);
 }
@@ -288,9 +290,9 @@ html, body, #root {
   border-radius: 3px;
   white-space: nowrap;
 }
-.badge--clean     { background: rgba(91, 141, 239, 0.15); color: var(--accent); }
+.badge--clean     { background: rgba(0, 204,  51, 0.12); color: var(--accent); }
 .badge--modified  { background: rgba(245, 200, 66, 0.15); color: var(--yellow); }
-.badge--committed { background: rgba(61, 220, 132, 0.15); color: var(--green); }
+.badge--committed { background: rgba(0, 204,  51, 0.18); color: var(--green); }
 .badge--discarded { background: rgba(255,255,255,0.06);   color: var(--text-dim); }
 
 /* ─── Action bar ────────────────────────────────────────────────────────────── */
