@@ -24,6 +24,7 @@ function createWindow(): BrowserWindow {
     title:           'GhostLayer',
     backgroundColor: '#0f1117',
     icon:            windowIcon.isEmpty() ? undefined : windowIcon,
+    frame:           false,   // custom frameless title bar in renderer
     show:            false,   // shown after 'ready-to-show' to avoid flash
     webPreferences: {
       preload:          path.join(__dirname, '../preload/index.js'),
@@ -105,6 +106,16 @@ function createTray(win: BrowserWindow): Tray {
   return tray
 }
 
+// ─── Window controls IPC (custom frameless title bar) ─────────────────────────
+function registerWindowControls(win: BrowserWindow) {
+  ipcMain.on('win:minimize', () => win.minimize())
+  ipcMain.on('win:maximize', () => {
+    if (win.isMaximized()) win.unmaximize()
+    else win.maximize()
+  })
+  ipcMain.on('win:close', () => win.close()) // respects 'close' handler → hides to tray
+}
+
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 // Track whether we are truly quitting (vs. minimizing to tray on window close)
 let isQuitting = false
@@ -118,6 +129,7 @@ app.whenReady().then(() => {
 
   mainWindow = createWindow()
   createTray(mainWindow)
+  registerWindowControls(mainWindow)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

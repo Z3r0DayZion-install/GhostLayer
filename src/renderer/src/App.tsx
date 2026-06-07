@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { CrashState, RAMPressure, StagedFile, WorkspaceStatus } from '../../shared/types'
 import { ghostErrorMessage } from '../../shared/types'
+import { TitleBar }    from './components/TitleBar'
 import { StatusBar }   from './components/StatusBar'
 import { FileList }    from './components/FileList'
 import { ActionBar }   from './components/ActionBar'
@@ -191,6 +192,8 @@ export default function App() {
       {crashState?.crashDetected && (
         <CrashDialog state={crashState} onDismiss={handleCrashDismiss} />
       )}
+
+      <TitleBar />
 
       <StatusBar
         workspace={workspace}

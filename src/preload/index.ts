@@ -39,6 +39,12 @@ const api = {
     pressure: ():                     Promise<RAMPressure>           => ipcRenderer.invoke(IPC.RAM_PRESSURE),
   },
 
+  win: {
+    minimize: () => ipcRenderer.send('win:minimize'),
+    maximize: () => ipcRenderer.send('win:maximize'),
+    close:    () => ipcRenderer.send('win:close'),
+  },
+
   tray: {
     // Push events from the main process (tray menu → renderer).
     // Call removeXxx in useEffect cleanup to avoid duplicate listeners on re-render.

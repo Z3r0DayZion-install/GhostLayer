@@ -23,8 +23,10 @@ export function StatusBar({ workspace, pressure, onAutoWipeToggle }: Props) {
   const barClass = `ram-bar__fill ram-bar__fill--${pressure?.pressure ?? 'ok'}`
   const showWarn = pressure && pressure.pressure !== 'ok'
 
+  const isActive = (workspace?.pendingCommitCount ?? 0) > 0
+
   return (
-    <header className="status-bar">
+    <header className={`status-bar${isActive ? ' status-bar--active' : ''}`}>
       <div className="status-bar__brand">
         <GhostLogo variant="tray" />
         <div className="status-bar__brand-text">
