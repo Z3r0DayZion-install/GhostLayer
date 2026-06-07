@@ -45,6 +45,10 @@ const api = {
     close:    () => ipcRenderer.send('win:close'),
   },
 
+  shell: {
+    openExternal: (url: string): Promise<void> => ipcRenderer.invoke('shell:open-external', url),
+  },
+
   tray: {
     // Push events from the main process (tray menu → renderer).
     // Call removeXxx in useEffect cleanup to avoid duplicate listeners on re-render.

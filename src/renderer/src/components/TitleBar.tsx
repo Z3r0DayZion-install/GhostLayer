@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { ProPanel } from './ProPanel'
 
 /**
  * Custom frameless title bar — replaces the native Electron window chrome.
@@ -7,15 +8,35 @@ import React from 'react'
  */
 export function TitleBar() {
   const win = window.ghostlayer.win
+  const [suiteOpen, setSuiteOpen] = useState(false)
 
   return (
     <div className="title-bar">
+      {suiteOpen && <ProPanel onClose={() => setSuiteOpen(false)} />}
+
       <div className="title-bar__drag" onDoubleClick={() => win.maximize()}>
         <span className="title-bar__dot" />
         <span className="title-bar__app-label">GHOSTLAYER</span>
+        <span className="title-bar__free-tag">free · local</span>
       </div>
 
       <div className="title-bar__controls">
+        {/* Suite panel toggle */}
+        <button
+          className={`title-bar__btn title-bar__btn--suite${suiteOpen ? ' title-bar__btn--suite-active' : ''}`}
+          onClick={() => setSuiteOpen(v => !v)}
+          aria-label="GhostLayer Suite"
+          tabIndex={-1}
+          title="More tools"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <rect x="0.5" y="0.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+            <rect x="7.5" y="0.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+            <rect x="0.5" y="7.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+            <rect x="7.5" y="7.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+          </svg>
+        </button>
+
         {/* Minimize */}
         <button
           className="title-bar__btn"

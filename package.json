@@ -37,6 +37,17 @@
       "target": [{ "target": "nsis", "arch": ["x64"] }],
       "icon":   "assets/ghostlayer/ghostlayer-icon-desktop.ico"
     },
+    "nsis": {
+      "oneClick":                true,
+      "perMachine":              false,
+      "createDesktopShortcut":   "always",
+      "createStartMenuShortcut": true,
+      "shortcutName":            "GhostLayer",
+      "menuCategory":            "GhostLayer",
+      "installerIcon":           "assets/ghostlayer/ghostlayer-icon-desktop.ico",
+      "uninstallerIcon":         "assets/ghostlayer/ghostlayer-icon-desktop.ico",
+      "artifactName":            "GhostLayer-Setup-${version}.exe"
+    },
     "extraResources": [
       { "from": "assets/ghostlayer/ghostlayer-icon-desktop.ico",     "to": "assets/ghostlayer/ghostlayer-icon-desktop.ico" },
       { "from": "assets/ghostlayer/ghostlayer-icon-tray.ico",        "to": "assets/ghostlayer/ghostlayer-icon-tray.ico" },

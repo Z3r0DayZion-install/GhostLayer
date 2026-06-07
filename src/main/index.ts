@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } from 'electron'
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } from 'electron'
 import path from 'path'
 import { registerIpcHandlers } from './ipc-handlers'
 import { markSessionOpen, markSessionClosed, getPersistedAutoWipe } from './crash'
@@ -114,6 +114,9 @@ function registerWindowControls(win: BrowserWindow) {
     else win.maximize()
   })
   ipcMain.on('win:close', () => win.close()) // respects 'close' handler → hides to tray
+
+  // Open external URLs in the system default browser (used by the Suite panel)
+  ipcMain.handle('shell:open-external', (_e, url: string) => shell.openExternal(url))
 }
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────

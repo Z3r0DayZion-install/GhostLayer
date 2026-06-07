@@ -141,6 +141,16 @@ html, body, #root {
   font-family: var(--mono);
 }
 
+/* "free · local" subtle tagline in drag area */
+.title-bar__free-tag {
+  font-size: 9px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+  margin-left: 4px;
+}
+
 .title-bar__controls {
   display: flex;
   align-items: stretch;
@@ -168,6 +178,191 @@ html, body, #root {
 .title-bar__btn--close:hover {
   background: var(--red);
   color: #fff;
+}
+
+/* Suite panel button — sits left of the window controls */
+.title-bar__btn--suite {
+  color: var(--text-dim);
+}
+.title-bar__btn--suite:hover,
+.title-bar__btn--suite-active {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
+/* ─── Suite / Pro panel ─────────────────────────────────────────────────────── */
+
+/* Invisible click-away backdrop */
+.pro-panel__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 498;
+  -webkit-app-region: no-drag;
+}
+
+/* The panel itself */
+.pro-panel {
+  position: absolute;
+  top: 32px;          /* just below title bar */
+  right: 138px;       /* aligned to suite button */
+  width: 272px;
+  z-index: 499;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 204, 51, 0.07);
+  padding: 14px 0 10px;
+  -webkit-app-region: no-drag;
+  animation: panel-drop 0.18s cubic-bezier(0.2, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+@keyframes panel-drop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.pro-panel__header {
+  padding: 0 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pro-panel__header-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.pro-panel__suite-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  font-family: var(--mono);
+}
+.pro-panel__pitch {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.01em;
+}
+
+.pro-panel__divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 0 6px;
+}
+
+/* Tool list */
+.pro-panel__tools {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 6px;
+  margin-bottom: 6px;
+}
+
+.pro-panel__tool {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px;
+  border-radius: var(--radius-sm);
+  cursor: default;
+  transition: background 0.1s;
+}
+.pro-panel__tool--free {
+  background: rgba(0, 204, 51, 0.05);
+}
+.pro-panel__tool--pro {
+  cursor: pointer;
+  opacity: 0.82;
+}
+.pro-panel__tool--pro:hover {
+  background: var(--bg-hover);
+  opacity: 1;
+}
+.pro-panel__tool--soon {
+  opacity: 0.4;
+}
+
+.pro-panel__tool-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+}
+.pro-panel__tool-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.pro-panel__tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pro-panel__tool-tagline {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tier badges */
+.pro-panel__badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.pro-panel__badge--free {
+  background: rgba(0, 204, 51, 0.14);
+  color: var(--accent);
+  border: 1px solid rgba(0, 204, 51, 0.25);
+}
+.pro-panel__badge--pro {
+  background: rgba(140, 80, 255, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(140, 80, 255, 0.25);
+}
+.pro-panel__badge--soon {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+/* Footer CTA */
+.pro-panel__cta {
+  display: block;
+  width: calc(100% - 12px);
+  margin: 0 6px;
+  padding: 7px 12px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.pro-panel__cta:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+  border-color: rgba(0, 204, 51, 0.3);
 }
 
 /* ─── Status bar ────────────────────────────────────────────────────────────── */
