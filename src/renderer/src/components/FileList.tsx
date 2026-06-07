@@ -2,13 +2,23 @@ import React, { useState } from 'react'
 import type { StagedFile } from '../../../shared/types'
 import { ghostErrorMessage } from '../../../shared/types'
 import { GhostLogo } from './GhostLogo'
+import type { FilterSettings } from './SettingsPanel'
 
 const api = window.ghostlayer
 
 const VANISH_MS = 400  // must match CSS animation duration
 
+const STATUS_GROUP_LABEL: Record<StagedFile['status'], string> = {
+  clean:     'IN RAM',
+  modified:  'MODIFIED',
+  committed: 'COMMITTED',
+  discarded: 'DISCARDED',
+}
+const STATUS_GROUP_ORDER: StagedFile['status'][] = ['clean', 'modified', 'committed']
+
 interface Props {
   files:     StagedFile[]
+  filters:   FilterSettings
   onRefresh: () => void
   onError:   (msg: string) => void
 }
@@ -43,13 +53,11 @@ function EmptyState() {
   )
 }
 
-export function FileList({ files, onRefresh, onError }: Props) {
+export function FileList({ files, filters, onRefresh, onError }: Props) {
   const [exiting, setExiting] = useState<Set<string>>(new Set())
 
   const startExit = (fileId: string, action: () => Promise<void>) => {
-    // Mark as exiting immediately so animation starts
     setExiting(prev => new Set(prev).add(fileId))
-    // Fire API call after animation plays out, then refresh
     setTimeout(async () => {
       await action()
       onRefresh()
@@ -57,7 +65,14 @@ export function FileList({ files, onRefresh, onError }: Props) {
     }, VANISH_MS - 20)
   }
 
-  const visible = files.filter(f => f.status !== 'discarded')
+  // Apply filter toggles
+  const visible = files.filter(f => {
+    if (f.status === 'discarded') return false
+    if (f.status === 'clean'     && !filters.showClean)     return false
+    if (f.status === 'modified'  && !filters.showModified)  return false
+    if (f.status === 'committed' && !filters.showCommitted) return false
+    return true
+  })
 
   if (visible.length === 0) {
     return <main className="file-list file-list--empty"><EmptyState /></main>
@@ -75,57 +90,73 @@ export function FileList({ files, onRefresh, onError }: Props) {
     startExit(fileId, () => api.files.unstage(fileId))
   }
 
+  // ── Single row renderer (reused for flat + grouped views) ──────────────────
+  const renderRow = (file: StagedFile) => (
+    <li
+      key={file.id}
+      className={`file-row file-row--${file.status}${exiting.has(file.id) ? ' file-row--exiting' : ''}`}
+      aria-label={`${file.filename}, ${STATUS_LABEL[file.status]}`}
+    >
+      {/* GL-203: filename + source path as two stacked lines */}
+      <span className="file-row__name-group">
+        <span className="file-row__name">{file.filename}</span>
+        <span className="file-row__source" title={file.originalPath}>{file.originalPath}</span>
+      </span>
+      <span className="file-row__size">{fmtBytes(file.sizeBytes)}</span>
+      <span className={`badge badge--${file.status}`} title={STATUS_TITLE[file.status]}>
+        {STATUS_LABEL[file.status]}
+      </span>
+      {/* GL-403: committed destination */}
+      {file.status === 'committed' && file.committedPath && (
+        <span className="file-row__dest" title={file.committedPath}>→ {file.committedPath}</span>
+      )}
+      <div className="file-row__actions">
+        {(file.status === 'clean' || file.status === 'modified') && (
+          <>
+            <button
+              className="btn btn--sm btn--ghost"
+              onClick={() => handleCommit(file.id)}
+              disabled={exiting.has(file.id)}
+            >Commit</button>
+            <button
+              className="btn btn--sm btn--danger-ghost"
+              onClick={() => handleDiscard(file.id)}
+              disabled={exiting.has(file.id)}
+            >Discard</button>
+          </>
+        )}
+      </div>
+    </li>
+  )
+
+  // ── Grouped view ─────────────────────────────────────────────────────────────
+  if (filters.groupByStatus) {
+    const groups = STATUS_GROUP_ORDER
+      .map(status => ({ status, rows: visible.filter(f => f.status === status) }))
+      .filter(g => g.rows.length > 0)
+
+    return (
+      <main className="file-list">
+        {groups.map(({ status, rows }) => (
+          <div key={status} className="file-group">
+            <div className={`file-group__header file-group__header--${status}`}>
+              <span className="file-group__label">{STATUS_GROUP_LABEL[status]}</span>
+              <span className="file-group__count">{rows.length}</span>
+            </div>
+            <ul className="file-list__ul" role="list">
+              {rows.map(renderRow)}
+            </ul>
+          </div>
+        ))}
+      </main>
+    )
+  }
+
+  // ── Flat view (default) ───────────────────────────────────────────────────────
   return (
     <main className="file-list">
       <ul className="file-list__ul" role="list">
-        {visible.map(file => (
-          <li
-            key={file.id}
-            className={`file-row file-row--${file.status}${exiting.has(file.id) ? ' file-row--exiting' : ''}`}
-            aria-label={`${file.filename}, ${STATUS_LABEL[file.status]}`}
-          >
-            {/* GL-203: show both filename and source path — source path is visible, not just a tooltip */}
-            <span className="file-row__name-group">
-              <span className="file-row__name">{file.filename}</span>
-              <span className="file-row__source" title={file.originalPath}>
-                {file.originalPath}
-              </span>
-            </span>
-            <span className="file-row__size">{fmtBytes(file.sizeBytes)}</span>
-            <span
-              className={`badge badge--${file.status}`}
-              title={STATUS_TITLE[file.status]}
-            >
-              {STATUS_LABEL[file.status]}
-            </span>
-            {/* GL-403: show committed destination path */}
-            {file.status === 'committed' && file.committedPath && (
-              <span className="file-row__dest" title={file.committedPath}>
-                → {file.committedPath}
-              </span>
-            )}
-            <div className="file-row__actions">
-              {(file.status === 'clean' || file.status === 'modified') && (
-                <>
-                  <button
-                    className="btn btn--sm btn--ghost"
-                    onClick={() => handleCommit(file.id)}
-                    disabled={exiting.has(file.id)}
-                  >
-                    Commit
-                  </button>
-                  <button
-                    className="btn btn--sm btn--danger-ghost"
-                    onClick={() => handleDiscard(file.id)}
-                    disabled={exiting.has(file.id)}
-                  >
-                    Discard
-                  </button>
-                </>
-              )}
-            </div>
-          </li>
-        ))}
+        {visible.map(renderRow)}
       </ul>
     </main>
   )

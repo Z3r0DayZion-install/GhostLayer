@@ -49,6 +49,12 @@ const api = {
     openExternal: (url: string): Promise<void> => ipcRenderer.invoke('shell:open-external', url),
   },
 
+  settings: {
+    getLoginItem: (): Promise<boolean>       => ipcRenderer.invoke('settings:get-login-item'),
+    setLoginItem: (enabled: boolean): Promise<void> => ipcRenderer.invoke('settings:set-login-item', enabled),
+    hideWindow:   ()                         => ipcRenderer.send('settings:hide-window'),
+  },
+
   tray: {
     // Push events from the main process (tray menu → renderer).
     // Call removeXxx in useEffect cleanup to avoid duplicate listeners on re-render.

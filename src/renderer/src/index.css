@@ -167,7 +167,7 @@ html, body, #root {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--text-dim);
+  color: var(--text-muted);
   transition: background 0.12s, color 0.12s;
   flex-shrink: 0;
 }
@@ -181,13 +181,219 @@ html, body, #root {
 }
 
 /* Suite panel button — sits left of the window controls */
-.title-bar__btn--suite {
-  color: var(--text-dim);
-}
 .title-bar__btn--suite:hover,
 .title-bar__btn--suite-active {
   background: var(--bg-hover);
   color: var(--accent);
+}
+
+/* Settings button — sits left of suite button */
+.title-bar__btn--settings:hover,
+.title-bar__btn--settings-active {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
+/* ─── Toggle switch ─────────────────────────────────────────────────────────── */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toggle--disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Hide the real checkbox visually but keep it accessible */
+.toggle__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.toggle__track {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--border-light);
+  border: 1px solid var(--border);
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s;
+}
+
+/* Checked state */
+.toggle__input:checked + .toggle__track {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.25);
+}
+.toggle__input:checked + .toggle__track .toggle__thumb {
+  transform: translateX(14px);
+  background: #041508;
+}
+
+/* ─── Settings panel ────────────────────────────────────────────────────────── */
+.settings-panel__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 498;
+  -webkit-app-region: no-drag;
+}
+
+.settings-panel {
+  position: fixed;
+  top: 32px;        /* below title bar */
+  right: 0;
+  bottom: 0;
+  width: 268px;
+  z-index: 499;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-light);
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  -webkit-app-region: no-drag;
+  animation: settings-slide 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+@keyframes settings-slide {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.settings-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.settings-panel__title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+.settings-panel__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  border-radius: 4px;
+  transition: background 0.1s, color 0.1s;
+}
+.settings-panel__close:hover { background: var(--bg-hover); color: var(--text); }
+
+.settings-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.settings-panel__section {
+  padding: 10px 14px 4px;
+}
+.settings-panel__section-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  margin-bottom: 6px;
+}
+
+.settings-panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+}
+.settings-panel__row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.settings-panel__row-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+.settings-panel__row-desc {
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+
+.settings-panel__divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 14px;
+}
+
+.settings-panel__footer {
+  padding: 10px 14px;
+  font-size: 10px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+/* ─── File group headers (group-by-status view) ─────────────────────────────── */
+.file-group { }
+
+.file-group__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 16px 5px 13px;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  background: rgba(255,255,255,0.02);
+}
+.file-group__header--clean     { border-left-color: var(--accent); }
+.file-group__header--modified  { border-left-color: var(--yellow); }
+.file-group__header--committed { border-left-color: rgba(0,204,51,0.2); }
+
+.file-group__label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  flex: 1;
+}
+.file-group__count {
+  font-size: 9px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  background: var(--border);
+  padding: 1px 5px;
+  border-radius: 8px;
 }
 
 /* ─── Suite / Pro panel ─────────────────────────────────────────────────────── */

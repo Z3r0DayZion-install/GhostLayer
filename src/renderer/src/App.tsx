@@ -1,13 +1,37 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { CrashState, RAMPressure, StagedFile, WorkspaceStatus } from '../../shared/types'
 import { ghostErrorMessage } from '../../shared/types'
-import { TitleBar }    from './components/TitleBar'
-import { StatusBar }   from './components/StatusBar'
-import { FileList }    from './components/FileList'
-import { ActionBar }   from './components/ActionBar'
-import { CrashDialog } from './components/CrashDialog'
-import { ErrorList }   from './components/ErrorList'
+import { TitleBar }     from './components/TitleBar'
+import { StatusBar }    from './components/StatusBar'
+import { FileList }     from './components/FileList'
+import { ActionBar }    from './components/ActionBar'
+import { CrashDialog }  from './components/CrashDialog'
+import { ErrorList }    from './components/ErrorList'
+import { SettingsPanel, DEFAULT_UI_SETTINGS } from './components/SettingsPanel'
+import type { UISettings } from './components/SettingsPanel'
 import type { AppError } from './components/ErrorList'
+
+// ─── Settings persistence ────────────────────────────────────────────────────
+const SETTINGS_KEY = 'gl-settings'
+
+function loadUISettings(): UISettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY)
+    if (!raw) return DEFAULT_UI_SETTINGS
+    // Deep-merge so new keys added in future versions get their defaults
+    const saved = JSON.parse(raw) as Partial<UISettings>
+    return {
+      filters:  { ...DEFAULT_UI_SETTINGS.filters,  ...(saved.filters  ?? {}) },
+      behavior: { ...DEFAULT_UI_SETTINGS.behavior, ...(saved.behavior ?? {}) },
+    }
+  } catch {
+    return DEFAULT_UI_SETTINGS
+  }
+}
+
+function saveUISettings(s: UISettings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s))
+}
 
 const api = window.ghostlayer
 
@@ -20,7 +44,9 @@ export default function App() {
   const [pressure,    setPressure]    = useState<RAMPressure | null>(null)
   const [crashState,  setCrashState]  = useState<CrashState | null>(null)
   const [errors,      setErrors]      = useState<AppError[]>([])
-  const [initialized, setInitialized] = useState(false)
+  const [initialized,   setInitialized]   = useState(false)
+  const [settingsOpen,  setSettingsOpen]  = useState(false)
+  const [uiSettings,    setUISettings]    = useState<UISettings>(loadUISettings)
   // GL-201: depth counter avoids spurious dragleave fires from child elements
   const dragDepth = useRef(0)
   const errorTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
@@ -74,6 +100,17 @@ export default function App() {
       ])
       setFiles(manifest)
       setPressure(ram)
+
+      // Sync launchOnStartup from the OS so the toggle reflects reality
+      const loginItem = await api.settings.getLoginItem()
+      setUISettings(prev => ({
+        ...prev,
+        behavior: { ...prev.behavior, launchOnStartup: loginItem },
+      }))
+
+      // Start minimized — hide window immediately if preference is set
+      const saved = loadUISettings()
+      if (saved.behavior.startMinimized) api.settings.hideWindow()
 
       setInitialized(true)
     }
@@ -149,6 +186,14 @@ export default function App() {
     await refreshAll()
   }, [refreshAll])
 
+  // ── Settings ─────────────────────────────────────────────────────────────────
+  const handleSettingsChange = useCallback(async (next: UISettings) => {
+    setUISettings(next)
+    saveUISettings(next)
+    // Side-effect: sync login item with OS whenever it changes
+    await api.settings.setLoginItem(next.behavior.launchOnStartup)
+  }, [])
+
   const handleCrashDismiss = useCallback(async () => {
     await api.crash.dismiss()
     setCrashState(null)
@@ -193,7 +238,17 @@ export default function App() {
         <CrashDialog state={crashState} onDismiss={handleCrashDismiss} />
       )}
 
-      <TitleBar />
+      <TitleBar onSettingsOpen={() => setSettingsOpen(v => !v)} settingsOpen={settingsOpen} />
+
+      {settingsOpen && (
+        <SettingsPanel
+          settings={uiSettings}
+          autoWipe={workspace?.autoWipe ?? false}
+          onSettingsChange={handleSettingsChange}
+          onAutoWipeChange={handleAutoWipeToggle}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
 
       <StatusBar
         workspace={workspace}
@@ -206,6 +261,7 @@ export default function App() {
 
       <FileList
         files={files}
+        filters={uiSettings.filters}
         onRefresh={refreshAll}
         onError={pushError}
       />

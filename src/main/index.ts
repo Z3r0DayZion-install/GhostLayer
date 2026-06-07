@@ -117,6 +117,14 @@ function registerWindowControls(win: BrowserWindow) {
 
   // Open external URLs in the system default browser (used by the Suite panel)
   ipcMain.handle('shell:open-external', (_e, url: string) => shell.openExternal(url))
+
+  // System settings
+  ipcMain.handle('settings:get-login-item', () => app.getLoginItemSettings().openAtLogin)
+  ipcMain.handle('settings:set-login-item', (_e, enabled: boolean) => {
+    app.setLoginItemSettings({ openAtLogin: enabled })
+  })
+  // Start minimized — hide the window immediately after the renderer signals ready
+  ipcMain.on('settings:hide-window', () => win.hide())
 }
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────

@@ -1,12 +1,17 @@
 import React, { useState } from 'react'
 import { ProPanel } from './ProPanel'
 
+interface Props {
+  settingsOpen:    boolean
+  onSettingsOpen:  () => void
+}
+
 /**
  * Custom frameless title bar — replaces the native Electron window chrome.
  * The drag region uses -webkit-app-region: drag (set in CSS).
  * Control buttons use -webkit-app-region: no-drag (set in CSS on .title-bar__controls).
  */
-export function TitleBar() {
+export function TitleBar({ settingsOpen, onSettingsOpen }: Props) {
   const win = window.ghostlayer.win
   const [suiteOpen, setSuiteOpen] = useState(false)
 
@@ -21,6 +26,21 @@ export function TitleBar() {
       </div>
 
       <div className="title-bar__controls">
+        {/* Settings */}
+        <button
+          className={`title-bar__btn title-bar__btn--settings${settingsOpen ? ' title-bar__btn--settings-active' : ''}`}
+          onClick={onSettingsOpen}
+          aria-label="Settings"
+          tabIndex={-1}
+          title="Settings"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" strokeWidth="1.3"/>
+            <path d="M6.5 1v1.2M6.5 10.8V12M12 6.5h-1.2M2.2 6.5H1M10.3 2.7l-.85.85M3.55 9.45l-.85.85M10.3 10.3l-.85-.85M3.55 3.55l-.85-.85"
+              stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+        </button>
+
         {/* Suite panel toggle */}
         <button
           className={`title-bar__btn title-bar__btn--suite${suiteOpen ? ' title-bar__btn--suite-active' : ''}`}
