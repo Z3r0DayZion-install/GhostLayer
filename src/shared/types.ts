@@ -91,8 +91,9 @@ export interface CrashState {
 // ─────────────────────────────────────────────────────────────────────────────
 export interface RAMPressure {
   workspaceUsedBytes: number
-  workspaceMaxBytes: number
-  systemFreeBytes: number
+  workspaceMaxBytes:  number
+  systemFreeBytes:    number
+  systemTotalBytes:   number
   pressure: 'ok' | 'warn' | 'critical'
 }
 

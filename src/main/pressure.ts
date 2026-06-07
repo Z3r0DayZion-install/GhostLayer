@@ -22,6 +22,7 @@ export function getRAMPressure(): RAMPressure {
     workspaceUsedBytes: workspaceUsed,
     workspaceMaxBytes:  workspaceMax,
     systemFreeBytes,
+    systemTotalBytes:   os.totalmem(),
     pressure,
   }
 }

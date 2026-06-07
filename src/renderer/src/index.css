@@ -574,15 +574,21 @@ html, body, #root {
 /* ─── Status bar ────────────────────────────────────────────────────────────── */
 .status-bar {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 16px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px 12px;
   background: rgba(23, 27, 36, 0.94);
   border-bottom: 1px solid rgba(0, 204, 51, 0.1);
   backdrop-filter: blur(10px);
   flex-shrink: 0;
   position: relative;
   z-index: 5;
+}
+
+.status-bar__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Ambient green line at the bottom when files are pending */
@@ -696,30 +702,188 @@ html, body, #root {
   letter-spacing: 0.08em;
 }
 
-/* ─── RAM bar ───────────────────────────────────────────────────────────────── */
-.status-bar__ram { flex: 1; min-width: 60px; }
+/* ─── RAM Gauge ─────────────────────────────────────────────────────────────── */
+.ram-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
 
-.ram-bar {
+/* ── Segmented bar shell ───────────────────────────────────────────────────── */
+.ram-gauge__bar-shell {
+  display: flex;
+  position: relative;
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  overflow: visible; /* allow ghost pin to float above */
+}
+.ram-gauge__bar-shell--loading {
+  animation: gauge-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes gauge-shimmer {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.6; }
+}
+
+/* ── Segments ─────────────────────────────────────────────────────────────── */
+.ram-gauge__seg {
+  flex-shrink: 0;
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+/* GhostLayer used — glowing green (reacts to pressure) */
+.ram-gauge__seg--gl {
+  background: linear-gradient(90deg, #009933, #00ff41);
+  box-shadow: 0 0 9px rgba(0, 255, 65, 0.55), 0 0 22px rgba(0, 255, 65, 0.18);
+  border-radius: 4px 0 0 4px;
+}
+.ram-gauge__seg--gl.ram-gauge__seg--warn {
+  background: linear-gradient(90deg, #7a6200, #f5c842);
+  box-shadow: 0 0 9px rgba(245, 200, 66, 0.5), 0 0 20px rgba(245, 200, 66, 0.15);
+}
+.ram-gauge__seg--gl.ram-gauge__seg--critical {
+  background: linear-gradient(90deg, #780000, #e55353);
+  box-shadow: 0 0 9px rgba(229, 83, 83, 0.6), 0 0 20px rgba(229, 83, 83, 0.18);
+}
+
+/* GhostLayer reserved capacity (cap minus used) — dim dashed zone */
+.ram-gauge__seg--gl-res {
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(0, 255, 65, 0.06) 0px,
+    rgba(0, 255, 65, 0.06) 3px,
+    transparent 3px,
+    transparent 6px
+  );
+  border-top:    1px dashed rgba(0, 255, 65, 0.18);
+  border-bottom: 1px dashed rgba(0, 255, 65, 0.18);
+  box-sizing: border-box;
+}
+
+/* System used — muted slate */
+.ram-gauge__seg--sys {
+  background: rgba(90, 110, 155, 0.52);
+}
+
+/* ── Ghost pin — floats above the GL/system boundary ─────────────────────── */
+.ram-gauge__ghost-pin {
+  position: absolute;
+  top: 0;
+  transform: translate(-50%, calc(-100% - 3px));
+  color: var(--accent);
+  filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.9));
+  transition: left 0.6s ease, color 0.3s, filter 0.3s;
+  pointer-events: none;
+  z-index: 2;
+  animation: ghost-pin-float 2.8s ease-in-out infinite alternate;
+}
+.ram-gauge__ghost-pin--warn {
+  color: var(--yellow);
+  filter: drop-shadow(0 0 5px rgba(245, 200, 66, 0.9));
+}
+.ram-gauge__ghost-pin--critical {
+  color: var(--red);
+  filter: drop-shadow(0 0 5px rgba(229, 83, 83, 0.9));
+  animation: ghost-pin-flicker 0.9s ease-in-out infinite alternate;
+}
+@keyframes ghost-pin-float {
+  from { transform: translate(-50%, calc(-100% - 3px)); }
+  to   { transform: translate(-50%, calc(-100% - 7px)); }
+}
+@keyframes ghost-pin-flicker {
+  0%   { opacity: 1;   transform: translate(-50%, calc(-100% - 3px)); }
+  40%  { opacity: 0.7; }
+  100% { opacity: 1;   transform: translate(-50%, calc(-100% - 6px)); }
+}
+
+/* ── Legend chips ─────────────────────────────────────────────────────────── */
+.ram-gauge__legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  margin-top: 4px;
+}
+
+.ram-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+/* Ghost chip — uses GL color, reacts to pressure */
+.ram-chip--gl          { color: var(--accent); }
+.ram-chip--gl.ram-chip--warn     { color: var(--yellow); }
+.ram-chip--gl.ram-chip--critical { color: var(--red); }
+
+.ram-chip__icon { opacity: 0.85; margin-right: 1px; }
+
+/* System / free dots */
+.ram-chip__dot {
+  width: 5px;
   height: 5px;
-  background: var(--border);
-  border-radius: 3px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ram-chip__dot--sys  { background: rgba(90, 110, 155, 0.85); }
+.ram-chip__dot--free { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.25); }
+
+.ram-chip__bytes { font-weight: 600; }
+.ram-chip__label {
+  opacity: 0.6;
+  margin-left: 1px;
+  color: var(--text-dim);
+}
+
+.ram-chip--sys  { color: rgba(160, 180, 210, 0.9); }
+.ram-chip--free { color: rgba(120, 130, 150, 0.8); }
+.ram-chip--dim  { color: var(--text-dim); }
+
+/* Total — pushed to the right */
+.ram-chip--total {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+/* ── Workspace budget bar (thin secondary indicator) ──────────────────────── */
+.ram-gauge__budget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ram-gauge__budget-track {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1px;
   overflow: hidden;
 }
-.ram-bar__fill {
+.ram-gauge__budget-fill {
   height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #009926, var(--accent));
-  box-shadow: 0 0 7px rgba(0, 255, 65, 0.22);
-  transition: width 0.4s ease, background 0.3s;
+  border-radius: 1px;
+  background: rgba(0, 255, 65, 0.45);
+  transition: width 0.5s ease;
 }
-.ram-bar__fill--warn {
-  background: linear-gradient(90deg, #c49900, var(--yellow));
-  box-shadow: 0 0 7px rgba(245, 200, 66, 0.28);
+.ram-gauge__budget-fill--warn     { background: rgba(245, 200, 66, 0.5); }
+.ram-gauge__budget-fill--critical { background: rgba(229, 83, 83, 0.55); }
+
+.ram-gauge__budget-label {
+  font-size: 9px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
-.ram-bar__fill--critical {
-  background: linear-gradient(90deg, #b02020, var(--red));
-  box-shadow: 0 0 7px rgba(229, 83, 83, 0.28);
-}
+.ram-gauge__budget-val { color: var(--text-muted); }
 
 .pressure-banner {
   font-size: 11px;
