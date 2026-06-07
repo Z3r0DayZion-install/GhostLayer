@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } from 'electron'
 import path from 'path'
 import { registerIpcHandlers } from './ipc-handlers'
 import { markSessionOpen, markSessionClosed, getPersistedAutoWipe } from './crash'
@@ -47,28 +47,34 @@ function createWindow(): BrowserWindow {
 }
 
 // ─── Tray ─────────────────────────────────────────────────────────────────────
+let trayRef: Tray | null = null
+
+// Resolve an asset inside assets/ghostlayer/ for both packaged and dev modes.
+// extraResources copies these files outside app.asar so the native image loader
+// can reach them via process.resourcesPath in the packaged build.
+function ghostAsset(filename: string): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'assets', 'ghostlayer', filename)
+    : path.join(app.getAppPath(), 'assets', 'ghostlayer', filename)
+}
+
 function createTray(win: BrowserWindow): Tray {
-  // In packaged mode app.getAppPath() points inside app.asar, which the native
-  // image loader cannot read. extraResources deposits the ICO beside the ASAR
-  // at resources/assets/icon.ico, accessible via process.resourcesPath.
-  const iconPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets', 'icon.ico')
-    : path.join(app.getAppPath(), 'assets', 'icon.ico')
-  const icon     = nativeImage.createFromPath(iconPath)
-  const tray  = new Tray(icon)
+  const normalIcon = nativeImage.createFromPath(ghostAsset('ghostlayer-icon-tray.ico'))
+
+  // Active icon (shown when staged items are pending). Falls back to normal icon
+  // if the file is missing so the tray never goes blank.
+  let activeIcon = nativeImage.createFromPath(ghostAsset('ghostlayer-icon-tray-active.ico'))
+  if (activeIcon.isEmpty()) activeIcon = normalIcon
+
+  const tray = new Tray(normalIcon)
+  trayRef = tray
   tray.setToolTip('GhostLayer')
 
   const menu = Menu.buildFromTemplate([
     { label: 'Open GhostLayer', click: () => win.show() },
     { type: 'separator' },
-    {
-      label: 'Commit All',
-      click: () => win.webContents.send('tray:commit-all'),
-    },
-    {
-      label: 'Discard All',
-      click: () => win.webContents.send('tray:discard-all'),
-    },
+    { label: 'Commit All',  click: () => win.webContents.send('tray:commit-all') },
+    { label: 'Discard All', click: () => win.webContents.send('tray:discard-all') },
     { type: 'separator' },
     {
       label: 'Quit',
@@ -81,6 +87,14 @@ function createTray(win: BrowserWindow): Tray {
 
   tray.setContextMenu(menu)
   tray.on('double-click', () => win.show())
+
+  // Renderer notifies main whenever the staged-file count changes.
+  // Switch between normal and active tray icon accordingly.
+  ipcMain.on('tray:staged-count', (_e, count: number) => {
+    if (!trayRef) return
+    trayRef.setImage(count > 0 ? activeIcon : normalIcon)
+  })
+
   return tray
 }
 

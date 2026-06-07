@@ -165,6 +165,14 @@ export default function App() {
     }
   }, [handleCommitAll, handleDiscardAll])
 
+  // ── Tray icon active state ────────────────────────────────────────────────────
+  // Notify main whenever the pending-file count changes so it can switch between
+  // the normal and active tray icons (active = files are staged and uncommitted).
+  useEffect(() => {
+    const pending = files.filter(f => f.status === 'clean' || f.status === 'modified').length
+    api.tray.notifyStagedCount(pending)
+  }, [files])
+
   // ── Render ───────────────────────────────────────────────────────────────────
   if (!initialized) {
     return <div className="app-loading">Initializing GhostLayer…</div>

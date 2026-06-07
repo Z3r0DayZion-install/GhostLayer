@@ -35,10 +35,12 @@
     "directories": { "output": "release" },
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }],
-      "icon":   "assets/icon.ico"
+      "icon":   "assets/ghostlayer/ghostlayer-icon-desktop.ico"
     },
     "extraResources": [
-      { "from": "assets/icon.ico", "to": "assets/icon.ico" }
+      { "from": "assets/ghostlayer/ghostlayer-icon-desktop.ico",     "to": "assets/ghostlayer/ghostlayer-icon-desktop.ico" },
+      { "from": "assets/ghostlayer/ghostlayer-icon-tray.ico",        "to": "assets/ghostlayer/ghostlayer-icon-tray.ico" },
+      { "from": "assets/ghostlayer/ghostlayer-icon-tray-active.ico", "to": "assets/ghostlayer/ghostlayer-icon-tray-active.ico" }
     ],
     "files": [
       "out/**",

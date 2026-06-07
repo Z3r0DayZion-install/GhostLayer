@@ -46,6 +46,9 @@ const api = {
     onDiscardAll:     (cb: () => void) => ipcRenderer.on('tray:discard-all', () => cb()),
     removeCommitAll:  ()               => ipcRenderer.removeAllListeners('tray:commit-all'),
     removeDiscardAll: ()               => ipcRenderer.removeAllListeners('tray:discard-all'),
+    // Renderer → main: notify when staged-file count changes so the tray icon
+    // can switch between normal and active states.
+    notifyStagedCount: (count: number) => ipcRenderer.send('tray:staged-count', count),
   },
 } as const
 
